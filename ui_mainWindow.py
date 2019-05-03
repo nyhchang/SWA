@@ -4,7 +4,7 @@ from PyQt5.QtGui import *
 
 class Ui_MainWindow(object):
     def setupUi(self, window):
-        window.setWindowTitle("Forest Trails")
+        window.setWindowTitle("Stormwater")
 
         self.centralWidget = QWidget(window)
         self.centralWidget.setMinimumSize(800, 400)

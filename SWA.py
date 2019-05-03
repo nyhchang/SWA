@@ -69,7 +69,7 @@ class ForestTrailsWindow(QMainWindow, Ui_MainWindow):
     def setupMapLayers(self):
         cur_dir = os.path.dirname(os.path.realpath(__file__))
         layers = []
-        filename = "C:\\Users\\Nathan\\Desktop\\SWA\\data\\basemap\\basemap4.tif"
+        filename = os.path.join(cur_dir, "data", "basemap", "basemap4.tif");
         self.baseLayer = QgsRasterLayer(filename, "Some Layer")
         if not self.baseLayer.isValid():
             print("Layer failed to load")
@@ -78,7 +78,7 @@ class ForestTrailsWindow(QMainWindow, Ui_MainWindow):
         layers.append(self.baseLayer)
         self.mapCanvas.setExtent(self.baseLayer.extent())
 
-        self.stmFlowLayer = QgsVectorLayer("C:\\Users\\Nathan\\Desktop\\SWA\\data\\StmFlow\\StmFlow.shp", "Storm Flow", "ogr")
+        self.stmFlowLayer = QgsVectorLayer(os.path.join(cur_dir, "data", "StmFlow", "StmFlow.shp"), "Storm Flow", "ogr")
         if not self.stmFlowLayer.isValid():
             print("shp Layer failed to load")
         QgsProject.instance().addMapLayer(self.stmFlowLayer)
