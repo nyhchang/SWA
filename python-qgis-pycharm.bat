@@ -1,9 +1,8 @@
 @echo off
-call "C:\OSGeo4W64\bin\o4w_env.bat"
-call "C:\OSGeo4W64\bin\qt5_env.bat"
-call "C:\OSGeo4W64\bin\py3_env.bat"
-@echo off
 set OSGEO4W_ROOT=C:\OSGeo4W64
+call "%OSGEO4W_ROOT%\bin\o4w_env.bat"
+call "%OSGEO4W_ROOT%\bin\qt5_env.bat"
+call "%OSGEO4W_ROOT%\bin\py3_env.bat"
 path %OSGEO4W_ROOT%\apps\qgis\bin;%PATH%
 set QGIS_PREFIX_PATH=%OSGEO4W_ROOT:\=/%/apps/qgis
 set GDAL_FILENAME_IS_UTF8=YES

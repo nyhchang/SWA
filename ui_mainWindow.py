@@ -48,48 +48,22 @@ class Ui_MainWindow(object):
         self.actionDeleteTrack.setShortcut("Ctrl+D")
         self.actionDeleteTrack.setCheckable(True)
 
-        self.actionGetInfo = QAction("Get Info", window)
-        self.actionGetInfo.setShortcut("Ctrl+I")
-        self.actionGetInfo.setCheckable(True)
-
-        self.actionSetStartPoint = QAction("Set Start Point", window)
-        self.actionSetStartPoint.setCheckable(True)
-
-        self.actionSetEndPoint = QAction("Set End Point", window)
-        self.actionSetEndPoint.setCheckable(True)
-
-        self.actionFindShortestPath = QAction("Find Shortest Path",
-                                              window)
-        self.actionFindShortestPath.setCheckable(True)
-
         self.fileMenu.addAction(self.actionQuit)
 
         self.mapMenu.addAction(self.actionZoomIn)
         self.mapMenu.addAction(self.actionZoomOut)
         self.mapMenu.addAction(self.actionPan)
-        self.mapMenu.addAction(self.actionEdit)
-
-        self.editMenu.addAction(self.actionAddTrack)
-        self.editMenu.addAction(self.actionEditTrack)
-        self.editMenu.addAction(self.actionDeleteTrack)
-        self.editMenu.addAction(self.actionGetInfo)
-
-        self.toolsMenu.addAction(self.actionSetStartPoint)
-        self.toolsMenu.addAction(self.actionSetEndPoint)
-        self.toolsMenu.addAction(self.actionFindShortestPath)
+        self.mapMenu.addAction(self.actionQuit)
 
         self.toolbar.addAction(self.actionZoomIn)
         self.toolbar.addAction(self.actionZoomOut)
         self.toolbar.addAction(self.actionPan)
         self.toolbar.addAction(self.actionEdit)
-        self.toolbar.addSeparator()
         self.toolbar.addAction(self.actionAddTrack)
         self.toolbar.addAction(self.actionEditTrack)
         self.toolbar.addAction(self.actionDeleteTrack)
-        self.toolbar.addAction(self.actionGetInfo)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.actionSetStartPoint)
-        self.toolbar.addAction(self.actionSetEndPoint)
-        self.toolbar.addAction(self.actionFindShortestPath)
+
+        self.toolbar.addAction(self.actionQuit)
+
 
         window.resize(window.sizeHint())
