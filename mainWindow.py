@@ -1,0 +1,210 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'mainWindow.ui'
+#
+# Created by: PyQt5 UI code generator 5.12.1
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
+
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(800, 600)
+        self.centralwidget = QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.QgsMapCanvas = QgsMapCanvas(self.centralwidget)
+        self.QgsMapCanvas.setGeometry(QRect(140, 130, 521, 301))
+        self.QgsMapCanvas.setObjectName("QgsMapCanvas")
+        self.DitchCheck = QRadioButton(self.centralwidget)
+        self.DitchCheck.setGeometry(QRect(690, 460, 77, 18))
+        self.DitchCheck.setObjectName("DitchCheck")
+        self.PipeCheck = QRadioButton(self.centralwidget)
+        self.PipeCheck.setGeometry(QRect(690, 420, 77, 18))
+        self.PipeCheck.setObjectName("PipeCheck")
+        self.StreetCheck = QRadioButton(self.centralwidget)
+        self.StreetCheck.setGeometry(QRect(690, 440, 77, 18))
+        self.StreetCheck.setObjectName("StreetCheck")
+        self.Export = QPushButton(self.centralwidget)
+        self.Export.setGeometry(QRect(320, 500, 141, 31))
+        self.Export.setObjectName("Export")
+        self.label = QLabel(self.centralwidget)
+        self.label.setGeometry(QRect(260, 20, 291, 61))
+        self.label.setText("")
+        self.label.setPixmap(QPixmap("resources/logo-fs8.png"))
+        self.label.setScaledContents(True)
+        self.label.setObjectName("label")
+        self.textBrowser = QTextBrowser(self.centralwidget)
+        self.textBrowser.setGeometry(QRect(270, 90, 271, 31))
+        self.textBrowser.setObjectName("textBrowser")
+        self.pushButton = QPushButton(self.centralwidget)
+        self.pushButton.setGeometry(QRect(30, 140, 81, 23))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QPushButton(self.centralwidget)
+        self.pushButton_2.setGeometry(QRect(30, 210, 81, 23))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.pushButton_3 = QPushButton(self.centralwidget)
+        self.pushButton_3.setGeometry(QRect(30, 280, 81, 23))
+        self.pushButton_3.setObjectName("pushButton_3")
+        self.pushButton_4 = QPushButton(self.centralwidget)
+        self.pushButton_4.setGeometry(QRect(30, 350, 81, 23))
+        self.pushButton_4.setObjectName("pushButton_4")
+        self.horizontalScrollBar = QScrollBar(self.centralwidget)
+        self.horizontalScrollBar.setGeometry(QRect(140, 430, 521, 16))
+        self.horizontalScrollBar.setOrientation(Qt.Horizontal)
+        self.horizontalScrollBar.setObjectName("horizontalScrollBar")
+        self.verticalScrollBar = QScrollBar(self.centralwidget)
+        self.verticalScrollBar.setGeometry(QRect(660, 130, 16, 301))
+        self.verticalScrollBar.setOrientation(Qt.Vertical)
+        self.verticalScrollBar.setObjectName("verticalScrollBar")
+        self.toolButton = QToolButton(self.centralwidget)
+        self.toolButton.setGeometry(QRect(150, 450, 31, 31))
+        self.toolButton.setText("")
+        icon = QIcon()
+        icon.addPixmap(QPixmap("resources/mActionZoomIn.png"), QIcon.Normal, QIcon.Off)
+        self.toolButton.setIcon(icon)
+        self.toolButton.setObjectName("toolButton")
+        self.toolButton_2 = QToolButton(self.centralwidget)
+        self.toolButton_2.setGeometry(QRect(190, 450, 31, 31))
+        self.toolButton_2.setText("")
+        icon1 = QIcon()
+        icon1.addPixmap(QPixmap("resources/mActionZoomOut.png"), QIcon.Normal, QIcon.Off)
+        self.toolButton_2.setIcon(icon1)
+        self.toolButton_2.setObjectName("toolButton_2")
+        self.toolButton_3 = QToolButton(self.centralwidget)
+        self.toolButton_3.setGeometry(QRect(230, 450, 31, 31))
+        self.toolButton_3.setText("")
+        icon2 = QIcon()
+        icon2.addPixmap(QPixmap("resources/mActionGetInfo.png"), QIcon.Normal, QIcon.Off)
+        self.toolButton_3.setIcon(icon2)
+        self.toolButton_3.setObjectName("toolButton_3")
+        self.toolButton_4 = QToolButton(self.centralwidget)
+        self.toolButton_4.setGeometry(QRect(270, 450, 31, 31))
+        self.toolButton_4.setText("")
+        icon3 = QIcon()
+        icon3.addPixmap(QPixmap("resources/mActionPan.png"), QIcon.Normal, QIcon.Off)
+        self.toolButton_4.setIcon(icon3)
+        self.toolButton_4.setObjectName("toolButton_4")
+        self.toolButton_5 = QToolButton(self.centralwidget)
+        self.toolButton_5.setGeometry(QRect(310, 450, 31, 31))
+        self.toolButton_5.setText("")
+        icon4 = QIcon()
+        icon4.addPixmap(QPixmap("resources/mActionEditTrack.png"), QIcon.Normal, QIcon.Off)
+        self.toolButton_5.setIcon(icon4)
+        self.toolButton_5.setObjectName("toolButton_5")
+        self.toolButton_6 = QToolButton(self.centralwidget)
+        self.toolButton_6.setGeometry(QRect(350, 450, 31, 31))
+        self.toolButton_6.setText("")
+        icon5 = QIcon()
+        icon5.addPixmap(QPixmap("resources/mActionSetStartPoint.png"), QIcon.Normal, QIcon.Off)
+        self.toolButton_6.setIcon(icon5)
+        self.toolButton_6.setObjectName("toolButton_6")
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QMenuBar(MainWindow)
+        self.menubar.setGeometry(QRect(0, 0, 800, 22))
+        self.menubar.setObjectName("menubar")
+        self.menuFile = QMenu(self.menubar)
+        self.menuFile.setObjectName("menuFile")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+        self.actionLoad_File = QAction(MainWindow)
+        self.actionLoad_File.setObjectName("actionLoad_File")
+        self.actionSave = QAction(MainWindow)
+        self.actionSave.setObjectName("actionSave")
+        self.actionSave_as = QAction(MainWindow)
+        self.actionSave_as.setObjectName("actionSave_as")
+        self.actionPrint = QAction(MainWindow)
+        self.actionPrint.setObjectName("actionPrint")
+        self.menuFile.addAction(self.actionLoad_File)
+        self.menuFile.addAction(self.actionSave)
+        self.menuFile.addAction(self.actionSave_as)
+        self.menuFile.addAction(self.actionPrint)
+        self.menubar.addAction(self.menuFile.menuAction())
+        self.mapMenu = self.menubar.addMenu("Map")
+        self.editMenu = self.menubar.addMenu("Edit")
+        self.toolsMenu = self.menubar.addMenu("Tools")
+
+        self.toolbar = QToolBar(MainWindow)
+        MainWindow.addToolBar(Qt.TopToolBarArea, self.toolbar)
+
+        self.actionQuit = QAction("Quit", MainWindow)
+        self.actionQuit.setShortcut(QKeySequence.Quit)
+
+        self.actionZoomIn = QAction("Zoom In", MainWindow)
+        self.actionZoomIn.setShortcut(QKeySequence.ZoomIn)
+
+        self.actionZoomOut = QAction("Zoom Out", MainWindow)
+        self.actionZoomOut.setShortcut(QKeySequence.ZoomOut)
+
+        self.actionPan = QAction("Pan", MainWindow)
+        self.actionPan.setShortcut("Ctrl+1")
+        self.actionPan.setCheckable(True)
+
+        self.actionEdit = QAction("Edit", MainWindow)
+        self.actionEdit.setShortcut("Ctrl+2")
+        self.actionEdit.setCheckable(True)
+
+        self.actionAddTrack = QAction("Add Track", MainWindow)
+        self.actionAddTrack.setShortcut("Ctrl+A")
+        self.actionAddTrack.setCheckable(True)
+
+        self.actionEditTrack = QAction("Edit Track", MainWindow)
+        self.actionEditTrack.setShortcut("Ctrl+E")
+        self.actionEditTrack.setCheckable(True)
+
+        self.actionDeleteTrack = QAction("Delete Track", MainWindow)
+        self.actionDeleteTrack.setShortcut("Ctrl+D")
+        self.actionDeleteTrack.setCheckable(True)
+
+        self.menuFile.addAction(self.actionQuit)
+
+        self.mapMenu.addAction(self.actionZoomIn)
+        self.mapMenu.addAction(self.actionZoomOut)
+        self.mapMenu.addAction(self.actionPan)
+        self.mapMenu.addAction(self.actionQuit)
+
+        self.toolbar.addAction(self.actionZoomIn)
+        self.toolbar.addAction(self.actionZoomOut)
+        self.toolbar.addAction(self.actionPan)
+        self.toolbar.addAction(self.actionEdit)
+        self.toolbar.addAction(self.actionAddTrack)
+        self.toolbar.addAction(self.actionEditTrack)
+        self.toolbar.addAction(self.actionDeleteTrack)
+
+        self.toolbar.addAction(self.actionQuit)
+
+        self.retranslateUi(MainWindow)
+        QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.DitchCheck.setText(_translate("MainWindow", "Ditch"))
+        self.PipeCheck.setText(_translate("MainWindow", "Pipe"))
+        self.StreetCheck.setText(_translate("MainWindow", "Street"))
+        self.Export.setText(_translate("MainWindow", "Export"))
+        self.textBrowser.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Project Window</span></p></body></html>"))
+        self.pushButton.setText(_translate("MainWindow", "Edit Ditch"))
+        self.pushButton_2.setText(_translate("MainWindow", "Edit Pipe"))
+        self.pushButton_3.setText(_translate("MainWindow", "Flow Direction"))
+        self.pushButton_4.setText(_translate("MainWindow", "LIDAR"))
+        self.menuFile.setTitle(_translate("MainWindow", "File"))
+        self.actionLoad_File.setText(_translate("MainWindow", "Load New File"))
+        self.actionSave.setText(_translate("MainWindow", "Save"))
+        self.actionSave_as.setText(_translate("MainWindow", "Save as"))
+        self.actionPrint.setText(_translate("MainWindow", "Print"))
+
+
+from qgis.gui import QgsMapCanvas

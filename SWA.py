@@ -11,13 +11,13 @@ from mapTools import *
 
 
 
-from ui_mainWindow import Ui_MainWindow
+from mainWindow import Ui_MainWindow
 
 from mapTools import *
 from constants import *
 
 
-class ForestTrailsWindow(QMainWindow, Ui_MainWindow):
+class SWAMain(QMainWindow, Ui_MainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
 
@@ -32,16 +32,17 @@ class ForestTrailsWindow(QMainWindow, Ui_MainWindow):
         self.actionEditTrack.triggered.connect(self.editTrack)
         self.actionDeleteTrack.triggered.connect(self.deleteTrack)
 
-        self.mapCanvas = QgsMapCanvas()
+        self.mapCanvas = self.QgsMapCanvas
         self.mapCanvas.setCanvasColor(Qt.white)
+        self.mapCanvas.setGeometry(QRect(140, 130, 521, 301))
         self.mapCanvas.show()
 
         self.editing = False
         self.modified = False
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.mapCanvas)
-        self.centralWidget.setLayout(layout)
+        # layout = QVBoxLayout()
+        # layout.setContentsMargins(0, 0, 0, 0)
+        # layout.addWidget(self.mapCanvas)
+        # self.centralwidget.setLayout(layout)
 
     def setupDatabase(self):
         cur_dir = os.path.dirname(os.path.realpath(__file__))
@@ -334,7 +335,7 @@ def main():
     app = QgsApplication([], False)
     app.initQgis()
 
-    window = ForestTrailsWindow()
+    window = SWAMain()
     window.show()
     window.raise_()
     window.setupDatabase()
