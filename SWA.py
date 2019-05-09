@@ -31,6 +31,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.actionAddTrack.triggered.connect(self.addTrack)
         self.actionEditTrack.triggered.connect(self.editTrack)
         self.actionDeleteTrack.triggered.connect(self.deleteTrack)
+        self.actionLoad_File.triggered.connect(self.openShp)
 
         self.mapCanvas = self.QgsMapCanvas
         self.mapCanvas.setCanvasColor(Qt.white)
@@ -39,10 +40,6 @@ class SWAMain(QMainWindow, Ui_MainWindow):
 
         self.editing = False
         self.modified = False
-        # layout = QVBoxLayout()
-        # layout.setContentsMargins(0, 0, 0, 0)
-        # layout.addWidget(self.mapCanvas)
-        # self.centralwidget.setLayout(layout)
 
     def setupDatabase(self):
         cur_dir = os.path.dirname(os.path.realpath(__file__))
@@ -79,11 +76,6 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         layers.append(self.baseLayer)
         self.mapCanvas.setExtent(self.baseLayer.extent())
 
-        self.stmFlowLayer = QgsVectorLayer(os.path.join(cur_dir, "data", "StmFlow", "StmFlow.shp"), "Storm Flow", "ogr")
-        if not self.stmFlowLayer.isValid():
-            print("shp Layer failed to load")
-        QgsProject.instance().addMapLayer(self.stmFlowLayer)
-
         uri = QgsDataSourceUri()
         uri.setDatabase(os.path.join(cur_dir, "data", "tracks.sqlite"))
         uri.setDataSource("", "tracks", "GEOMETRY")
@@ -91,7 +83,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.trackLayer = QgsVectorLayer(uri.uri(), "Tracks", "spatialite")
         QgsProject.instance().addMapLayer(self.trackLayer)
 
-        layers.insert(0, self.stmFlowLayer)
+        #layers.insert(0, self.stmFlowLayer)
         layers.insert(0, self.trackLayer)
 
         self.mapCanvas.setLayers(layers)
@@ -326,6 +318,22 @@ class SWAMain(QMainWindow, Ui_MainWindow):
 
     def getInfo(self):
         pass
+
+    def openShp(self):
+        shpFileName = QFileDialog.getOpenFileName(None, "Select File")
+        if shpFileName[0] != "":
+            self.newLayer = QgsVectorLayer(shpFileName[0])
+            self.stmFlowLayer = QgsVectorLayer("Storm Flow", "ogr")
+            if not self.newLayer.isValid():
+                print("shp Layer failed to load")
+            QgsProject.instance().addMapLayer(self.newLayer)
+            currentLayers = self.mapCanvas.layers()
+            currentLayers.insert(1, self.newLayer)
+            self.mapCanvas.setLayers(currentLayers)
+            self.mapCanvas.refresh()
+
+
+
 
 
 
