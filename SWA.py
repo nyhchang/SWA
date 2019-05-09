@@ -12,15 +12,23 @@ from mapTools import *
 
 
 from mainWindow import Ui_MainWindow
+from WelcomeWindow import Ui_Dialog
 
 from mapTools import *
 from constants import *
 
-
-class SWAMain(QMainWindow, Ui_MainWindow):
+class Welcome(QMainWindow, Ui_Dialog):
     def __init__(self):
         QMainWindow.__init__(self)
+        self.setupUi(self)
+        print(self.loaded)
 
+
+
+class SWAMain(QMainWindow, Ui_MainWindow):
+    def __init__(self, path):
+        QMainWindow.__init__(self)
+        print(path)
         self.setupUi(self)
 
         self.actionQuit.triggered.connect(self.quit)
@@ -335,15 +343,8 @@ class SWAMain(QMainWindow, Ui_MainWindow):
 
 
 
-
-
-def main():
-
-    QgsApplication.setPrefixPath("C:\\OSGeo4W64\\apps\\qgis", True)
-    app = QgsApplication([], False)
-    app.initQgis()
-
-    window = SWAMain()
+def fileLoaded(path):
+    window = SWAMain(path)
     window.show()
     window.raise_()
     window.setupDatabase()
@@ -353,9 +354,19 @@ def main():
     window.setPanMode()
     window.adjustActions()
 
+
+def main():
+
+    QgsApplication.setPrefixPath("C:\\OSGeo4W64\\apps\\qgis", True)
+    app = QgsApplication([], False)
+    app.initQgis()
+
+    firstWindow = Welcome()
+    firstWindow.show()
+    firstWindow.loaded[str].connect(fileLoaded)
+
     app.exec_()
     app.deleteLater()
-    window.close()
     QgsApplication.exitQgis()
 
 

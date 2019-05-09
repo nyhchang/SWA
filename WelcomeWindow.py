@@ -3,6 +3,8 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 
 
 class Ui_Dialog(object):
+    loaded = QtCore.pyqtSignal(str)
+    fileName = None
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(400, 300)
@@ -26,8 +28,9 @@ class Ui_Dialog(object):
         self.pushButton_2.clicked.connect(self.loadFile)
 
     def loadFile(self):
-        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File")
-        file = open(fileName, 'r')
+        self.fileName = QtWidgets.QFileDialog.getOpenFileName(None, "Select File")
+        if self.fileName != None:
+            self.loaded.emit(self.fileName[0])
 
       
 
