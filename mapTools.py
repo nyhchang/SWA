@@ -3,7 +3,6 @@ from qgis.gui import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from constants import *
 import math
 
 class MapToolHelpers:
@@ -87,12 +86,12 @@ class PanTool(QgsMapTool):
             self.canvas().panActionEnd(event.pos())
             self.dragging = False
 
-class AddTrackTool(QgsMapTool, MapToolHelpers):
-    def __init__(self, canvas, layer, onTrackAdded):
+class AddFlowPathTool(QgsMapTool, MapToolHelpers):
+    def __init__(self, canvas, layer, onFlowPathAdded):
         QgsMapTool.__init__(self, canvas)
 
         self.canvas         = canvas
-        self.onTrackAdded   = onTrackAdded
+        self.onFlowPathAdded   = onFlowPathAdded
         self.rubberBand     = None
         self.tempRubberBand = None
         self.capturedPoints = []
@@ -204,17 +203,17 @@ class AddTrackTool(QgsMapTool, MapToolHelpers):
         feature.setGeometry(QgsGeometry.fromPolylineXY(points))
         print(QgsGeometry.fromPolylineXY(points))
         feature.setFields(fields)
-        feature.setAttribute("direction", TRACK_DIRECTION_FORWARD)
+        feature.setAttribute("direction", "FORWARD")
 
         self.layer.addFeature(feature)
         self.layer.updateExtents()
-        self.onTrackAdded()
+        self.onFlowPathAdded()
 
 
-class EditTrackTool(QgsMapTool, MapToolHelpers):
-    def __init__(self, canvas, layer, onTrackEdited):
+class EditFlowPathTool(QgsMapTool, MapToolHelpers):
+    def __init__(self, canvas, layer, onFlowPathEdited):
         QgsMapTool.__init__(self, canvas)
-        self.onTrackEdited = onTrackEdited
+        self.onFlowPathEdited = onFlowPathEdited
         self.dragging      = False
         self.feature       = None
         self.vertex        = None
@@ -273,7 +272,7 @@ class EditTrackTool(QgsMapTool, MapToolHelpers):
 
         geometry.insertVertex(closestPt.x(), closestPt.y(), beforeVertex)
         self.layer.changeGeometry(feature.id(), geometry)
-        self.onTrackEdited()
+        self.onFlowPathEdited()
         self.canvas().refresh()
 
     def moveVertexTo(self, pos):
@@ -283,7 +282,7 @@ class EditTrackTool(QgsMapTool, MapToolHelpers):
 
         geometry.moveVertex(snappedPt.x(), snappedPt.y(), self.vertex)
         self.layer.changeGeometry(self.feature.id(), geometry)
-        self.onTrackEdited()
+        self.onFlowPathEdited()
 
     def deleteVertex(self, feature, vertex):
         geometry = feature.geometry()
@@ -294,13 +293,13 @@ class EditTrackTool(QgsMapTool, MapToolHelpers):
 
         if geometry.deleteVertex(vertex):
             self.layer.changeGeometry(feature.id(), geometry)
-            self.onTrackEdited()
+            self.onFlowPathEdited()
 
 
-class DeleteTrackTool(QgsMapTool, MapToolHelpers):
-    def __init__(self, canvas, layer, onTrackDeleted):
+class DeleteFlowPathTool(QgsMapTool, MapToolHelpers):
+    def __init__(self, canvas, layer, onFlowPathDeleted):
         QgsMapTool.__init__(self, canvas)
-        self.onTrackDeleted = onTrackDeleted
+        self.onFlowPathDeleted = onFlowPathDeleted
         self.feature_id     = None
         self.setLayer(layer)
         self.setCursor(Qt.CrossCursor)
@@ -316,4 +315,4 @@ class DeleteTrackTool(QgsMapTool, MapToolHelpers):
         feature = self.findFeatureAt(event.pos())
         if feature != None and feature.id() == self.feature_id:
             self.layer.deleteFeature(feature.id())
-            self.onTrackDeleted()
+            self.onFlowPathDeleted()

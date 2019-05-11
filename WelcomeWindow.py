@@ -32,8 +32,6 @@ class Ui_Dialog(object):
         if self.fileName != None:
             self.loaded.emit(self.fileName[0])
 
-      
-
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "StormWater Application"))

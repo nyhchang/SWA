@@ -11,24 +11,33 @@ from mapTools import *
 from osgeo import gdal
 
 
-from gridTest import Ui_MainWindow
+from mainWindow import Ui_MainWindow
 from WelcomeWindow import Ui_Dialog
 
 from mapTools import *
-from constants import *
 
 class Welcome(QMainWindow, Ui_Dialog):
     def __init__(self):
         QMainWindow.__init__(self)
         self.setupUi(self)
-        print(self.loaded)
 
+        self.loaded[str].connect(self.onLoadFile)
 
+    def onLoadFile(self, path):
+        self.hide()
+        self.newWindow = SWAMain(path)
+        self.newWindow.show()
+        self.newWindow.raise_()
+        self.newWindow.setupDatabase()
+        self.newWindow.setupMapLayers()
+        self.newWindow.setupRenderers()
+        self.newWindow.setupMapTools()
+        self.newWindow.setPanMode()
+        self.newWindow.adjustActions()
 
 class SWAMain(QMainWindow, Ui_MainWindow):
     def __init__(self, path):
         QMainWindow.__init__(self)
-        print(path)
         self.setupUi(self)
 
         self.actionQuit.triggered.connect(self.quit)
@@ -36,9 +45,9 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.actionZoomIn.triggered.connect(self.zoomIn)
         self.actionZoomOut.triggered.connect(self.zoomOut)
         self.actionEdit.triggered.connect(self.setEditMode)
-        self.actionAddTrack.triggered.connect(self.addTrack)
-        self.actionEditTrack.triggered.connect(self.editTrack)
-        self.actionDeleteTrack.triggered.connect(self.deleteTrack)
+        self.actionAddFlowPath.triggered.connect(self.addFlowPath)
+        self.actionEditFlowPath.triggered.connect(self.editFlowPath)
+        self.actionDeleteFlowPath.triggered.connect(self.deleteFlowPath)
         self.actionLoad_File.triggered.connect(self.openShp)
 
         self.mapCanvas = self.QgsMapCanvas
@@ -51,7 +60,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
 
     def setupDatabase(self):
         cur_dir = os.path.dirname(os.path.realpath(__file__))
-        db_name = os.path.join(cur_dir, "data", "tracks.sqlite")
+        db_name = os.path.join(cur_dir, "data", "FlowPaths.sqlite")
         if not os.path.exists(db_name):
             fields = QgsFields()
             fields.append(QgsField("id", QVariant.Int))
@@ -67,7 +76,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
                                          crs, "SQLite",
                                          ["SPATIALITE=YES"])
             if writer.hasError() != QgsVectorFileWriter.NoError:
-                print("Error creating tracks database!")
+                print("Database create error")
 
             del writer
 
@@ -85,32 +94,48 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.mapCanvas.setExtent(rect)
 
         uri = QgsDataSourceUri()
-        uri.setDatabase(os.path.join(cur_dir, "data", "tracks.sqlite"))
-        uri.setDataSource("", "tracks", "GEOMETRY")
+        uri.setDatabase(os.path.join(cur_dir, "data", "FlowPaths.sqlite"))
+        uri.setDataSource("", "FlowPaths", "GEOMETRY")
 
-        self.trackLayer = QgsVectorLayer(uri.uri(), "Tracks", "spatialite")
-        QgsProject.instance().addMapLayer(self.trackLayer)
+        self.FlowPathLayer = QgsVectorLayer(uri.uri(), "FlowPaths", "spatialite")
+        QgsProject.instance().addMapLayer(self.FlowPathLayer)
 
-        layers.insert(0, self.trackLayer)
+        layers.insert(0, self.FlowPathLayer)
         QgsProject.instance().setCrs(crs)
         self.mapCanvas.setLayers(layers)
-        print(self.baseLayer.crs())
+
+        self.root = QgsProject.instance().layerTreeRoot()
+        self.bridge = QgsLayerTreeMapCanvasBridge(self.root, self.mapCanvas)
+        self.model = QgsLayerTreeModel(self.root)
+        self.model.setFlag(QgsLayerTreeModel.AllowNodeReorder)
+        self.model.setFlag(QgsLayerTreeModel.AllowNodeRename)
+        self.model.setFlag(QgsLayerTreeModel.AllowNodeChangeVisibility)
+        self.model.setFlag(QgsLayerTreeModel.ShowLegend)
+        self.view = QgsLayerTreeView()
+        self.view.setModel(self.model)
+        self.LegendDock = QDockWidget("Layers", self)
+        self.LegendDock.setObjectName("layers")
+        self.LegendDock.setAllowedAreas(Qt.RightDockWidgetArea)
+        self.LegendDock.setWidget(self.view)
+        self.LegendDock.setContentsMargins(0, 0, 0, 0)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.LegendDock)
+
 
     def setupRenderers(self):
-        # Setup the renderer for our track layer.
+        # Setup the renderer for our FlowPath layer.
 
         root_rule = QgsRuleBasedRenderer.Rule(None)
         width = .3
         line_colour  = "red"
         arrow_colour = "red"
-        for track_direction in (TRACK_DIRECTION_BOTH,
-                                TRACK_DIRECTION_FORWARD):
+        for FlowPath_direction in ("BOTH",
+                                "FORWARD"):
 
-            symbol = self.createTrackSymbol(width,
+            symbol = self.createFlowPathSymbol(width,
                                             line_colour,
                                             arrow_colour,
-                                            track_direction)
-            expression = "(direction='%s')" % track_direction
+                                            FlowPath_direction)
+            expression = "(direction='%s')" % FlowPath_direction
 
             rule = QgsRuleBasedRenderer.Rule(symbol,
                                                filterExp=expression)
@@ -120,12 +145,12 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         root_rule.appendChild(rule)
 
         renderer = QgsRuleBasedRenderer(root_rule)
-        self.trackLayer.setRenderer(renderer)
+        self.FlowPathLayer.setRenderer(renderer)
 
 
 
 
-    def createTrackSymbol(self, width, line_colour, arrow_colour,
+    def createFlowPathSymbol(self, width, line_colour, arrow_colour,
                           direction):
         symbol = QgsLineSymbol.createSimple({})
         symbol.deleteSymbolLayer(0) # Remove default symbol layer.
@@ -153,7 +178,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
                         "color"         : arrow_colour,
                         "color_border"  : arrow_colour,
                         "offset"        : "0.0",
-                        "size"          : "3",
+                        "size"          : "2",
                         "outline_width" : "0.5",
                         "output_unit"   : "mapunit",
                         "angle"         : "0"})
@@ -162,20 +187,20 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         return symbol
 
 
-    def onTrackAdded(self):
+    def onFlowPathAdded(self):
         self.modified = True
         self.mapCanvas.refresh()
-        self.actionAddTrack.setChecked(False)
+        self.actionAddFlowPath.setChecked(False)
         self.setPanMode()
 
-    def onTrackEdited(self):
+    def onFlowPathEdited(self):
         self.modified = True
         self.mapCanvas.refresh()
 
-    def onTrackDeleted(self):
+    def onFlowPathDeleted(self):
         self.modified = True
         self.mapCanvas.refresh()
-        self.actionDeleteTrack.setChecked(False)
+        self.actionDeleteFlowPath.setChecked(False)
         self.setPanMode()
 
     def closeEvent(self, event):
@@ -184,20 +209,20 @@ class SWAMain(QMainWindow, Ui_MainWindow):
     def setupMapTools(self):
         self.panTool = PanTool(self.mapCanvas)
         self.panTool.setAction(self.actionPan)
-        self.addTrackTool = AddTrackTool(self.mapCanvas,
-                                         self.trackLayer,
-                                         self.onTrackAdded)
-        self.addTrackTool.setAction(self.actionAddTrack)
+        self.addFlowPathTool = AddFlowPathTool(self.mapCanvas,
+                                         self.FlowPathLayer,
+                                         self.onFlowPathAdded)
+        self.addFlowPathTool.setAction(self.actionAddFlowPath)
 
-        self.editTrackTool = EditTrackTool(self.mapCanvas,
-                                           self.trackLayer,
-                                           self.onTrackEdited)
-        self.editTrackTool.setAction(self.actionEditTrack)
+        self.editFlowPathTool = EditFlowPathTool(self.mapCanvas,
+                                           self.FlowPathLayer,
+                                           self.onFlowPathEdited)
+        self.editFlowPathTool.setAction(self.actionEditFlowPath)
 
-        self.deleteTrackTool = DeleteTrackTool(self.mapCanvas,
-                                               self.trackLayer,
-                                               self.onTrackDeleted)
-        self.deleteTrackTool.setAction(self.actionDeleteTrack)
+        self.deleteFlowPathTool = DeleteFlowPathTool(self.mapCanvas,
+                                               self.FlowPathLayer,
+                                               self.onFlowPathDeleted)
+        self.deleteFlowPathTool.setAction(self.actionDeleteFlowPath)
 
 
     def zoomIn(self):
@@ -214,9 +239,9 @@ class SWAMain(QMainWindow, Ui_MainWindow):
                                          | QMessageBox.Cancel,
                                          QMessageBox.Yes)
             if reply == QMessageBox.Yes:
-                self.trackLayer.commitChanges()
+                self.FlowPathLayer.commitChanges()
             elif reply == QMessageBox.No:
-                self.trackLayer.rollBack()
+                self.FlowPathLayer.rollBack()
 
             if reply != QMessageBox.Cancel:
                 qApp.quit()
@@ -229,30 +254,30 @@ class SWAMain(QMainWindow, Ui_MainWindow):
 
     def adjustActions(self):
         if self.editing:
-            self.actionAddTrack.setEnabled(True)
-            self.actionEditTrack.setEnabled(True)
-            self.actionDeleteTrack.setEnabled(True)
+            self.actionAddFlowPath.setEnabled(True)
+            self.actionEditFlowPath.setEnabled(True)
+            self.actionDeleteFlowPath.setEnabled(True)
         else:
-            self.actionAddTrack.setEnabled(False)
-            self.actionEditTrack.setEnabled(False)
-            self.actionDeleteTrack.setEnabled(False)
+            self.actionAddFlowPath.setEnabled(False)
+            self.actionEditFlowPath.setEnabled(False)
+            self.actionDeleteFlowPath.setEnabled(False)
 
-    def addTrack(self):
-        if self.actionAddTrack.isChecked():
-            self.mapCanvas.setMapTool(self.addTrackTool)
+    def addFlowPath(self):
+        if self.actionAddFlowPath.isChecked():
+            self.mapCanvas.setMapTool(self.addFlowPathTool)
         else:
             self.setPanMode()
         self.adjustActions()
 
-    def editTrack(self):
-        if self.actionEditTrack.isChecked():
-            self.mapCanvas.setMapTool(self.editTrackTool)
+    def editFlowPath(self):
+        if self.actionEditFlowPath.isChecked():
+            self.mapCanvas.setMapTool(self.editFlowPathTool)
         else:
             self.setPanMode()
 
-    def deleteTrack(self):
-        if self.actionDeleteTrack.isChecked():
-            self.mapCanvas.setMapTool(self.deleteTrackTool)
+    def deleteFlowPath(self):
+        if self.actionDeleteFlowPath.isChecked():
+            self.mapCanvas.setMapTool(self.deleteFlowPathTool)
         else:
             self.setPanMode()
 
@@ -261,17 +286,17 @@ class SWAMain(QMainWindow, Ui_MainWindow):
             if self.modified:
                 reply = QMessageBox.question(self, "Confirm", "Save Changes?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if reply == QMessageBox.Yes:
-                    self.trackLayer.commitChanges()
+                    self.FlowPathLayer.commitChanges()
                 else:
-                    self.trackLayer.rollBack()
+                    self.FlowPathLayer.rollBack()
             else:
-                self.trackLayer.commitChanges()
-            self.trackLayer.triggerRepaint()
+                self.FlowPathLayer.commitChanges()
+            self.FlowPathLayer.triggerRepaint()
             self.editing = False
             self.setPanMode()
         else:
-            self.trackLayer.startEditing()
-            self.trackLayer.triggerRepaint()
+            self.FlowPathLayer.startEditing()
+            self.FlowPathLayer.triggerRepaint()
             self.editing = True
             self.modified = False
 
@@ -283,7 +308,10 @@ class SWAMain(QMainWindow, Ui_MainWindow):
     def openShp(self):
         shpFileName = QFileDialog.getOpenFileName(None, "Select File")
         if shpFileName[0] != "":
-            self.newLayer = QgsVectorLayer(shpFileName[0])
+            url = QUrl.fromLocalFile(shpFileName[0])
+            filenameunsplit = url.fileName()
+            filesplit = filenameunsplit.split(".")
+            self.newLayer = QgsVectorLayer(shpFileName[0], filesplit[0], "ogr")
             QgsProject.instance().addMapLayer(self.newLayer)
             currentLayers = self.mapCanvas.layers()
             currentLayers.insert(0, self.newLayer)
@@ -292,32 +320,17 @@ class SWAMain(QMainWindow, Ui_MainWindow):
             self.mapCanvas.refresh()
 
 
-
-def openMainUi(path):
-    window = SWAMain(path)
-    window.show()
-    window.raise_()
-    window.setupDatabase()
-    window.setupMapLayers()
-    window.setupRenderers()
-    window.setupMapTools()
-    window.setPanMode()
-    window.adjustActions()
-
 def main():
-
     QgsApplication.setPrefixPath("C:\\OSGeo4W64\\apps\\qgis", True)
     app = QgsApplication([], False)
     app.initQgis()
 
     firstWindow = Welcome()
     firstWindow.show()
-    firstWindow.loaded[str].connect(openMainUi)
 
     app.exec_()
     app.deleteLater()
     QgsApplication.exitQgis()
-
 
 
 if __name__ == '__main__':
