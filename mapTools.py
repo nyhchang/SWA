@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import *
 from constants import *
 import math
 
-class MapToolMixin:
+class MapToolHelpers:
     def setLayer(self, layer):
         self.layer = layer
 
@@ -87,7 +87,7 @@ class PanTool(QgsMapTool):
             self.canvas().panActionEnd(event.pos())
             self.dragging = False
 
-class AddTrackTool(QgsMapTool, MapToolMixin):
+class AddTrackTool(QgsMapTool, MapToolHelpers):
     def __init__(self, canvas, layer, onTrackAdded):
         QgsMapTool.__init__(self, canvas)
 
@@ -204,8 +204,6 @@ class AddTrackTool(QgsMapTool, MapToolMixin):
         feature.setGeometry(QgsGeometry.fromPolylineXY(points))
         print(QgsGeometry.fromPolylineXY(points))
         feature.setFields(fields)
-        feature.setAttribute("type",      TRACK_TYPE_ROAD)
-        feature.setAttribute("status",    TRACK_STATUS_OPEN)
         feature.setAttribute("direction", TRACK_DIRECTION_FORWARD)
 
         self.layer.addFeature(feature)
@@ -213,7 +211,7 @@ class AddTrackTool(QgsMapTool, MapToolMixin):
         self.onTrackAdded()
 
 
-class EditTrackTool(QgsMapTool, MapToolMixin):
+class EditTrackTool(QgsMapTool, MapToolHelpers):
     def __init__(self, canvas, layer, onTrackEdited):
         QgsMapTool.__init__(self, canvas)
         self.onTrackEdited = onTrackEdited
@@ -299,7 +297,7 @@ class EditTrackTool(QgsMapTool, MapToolMixin):
             self.onTrackEdited()
 
 
-class DeleteTrackTool(QgsMapTool, MapToolMixin):
+class DeleteTrackTool(QgsMapTool, MapToolHelpers):
     def __init__(self, canvas, layer, onTrackDeleted):
         QgsMapTool.__init__(self, canvas)
         self.onTrackDeleted = onTrackDeleted

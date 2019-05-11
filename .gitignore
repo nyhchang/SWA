@@ -4,3 +4,4 @@ __pycache__
 oauth2-cache
 data/
 python-qgis-pycharm.bat
+gdalwmscache/

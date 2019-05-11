@@ -8,10 +8,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from mapTools import *
+from osgeo import gdal
 
 
-
-from mainWindow import Ui_MainWindow
+from gridTest import Ui_MainWindow
 from WelcomeWindow import Ui_Dialog
 
 from mapTools import *
@@ -58,7 +58,6 @@ class SWAMain(QMainWindow, Ui_MainWindow):
             fields.append(QgsField("type", QVariant.String))
             fields.append(QgsField("name", QVariant.String))
             fields.append(QgsField("direction", QVariant.String))
-            fields.append(QgsField("status", QVariant.String))
 
             crs = QgsCoordinateReferenceSystem(2913,
                                                QgsCoordinateReferenceSystem.EpsgCrsId)
@@ -74,15 +73,16 @@ class SWAMain(QMainWindow, Ui_MainWindow):
 
     def setupMapLayers(self):
         cur_dir = os.path.dirname(os.path.realpath(__file__))
+        self.baseLayer = QgsRasterLayer(os.path.join(cur_dir, "data", "basemap", "basemap.xml"), "OSM")
         layers = []
-        filename = os.path.join(cur_dir, "data", "basemap", "basemap4.tif");
-        self.baseLayer = QgsRasterLayer(filename, "Some Layer")
         if not self.baseLayer.isValid():
             print("Layer failed to load")
-
+        crs = QgsCoordinateReferenceSystem(2913)
+        self.baseLayer.setCrs(crs)
         QgsProject.instance().addMapLayer(self.baseLayer)
         layers.append(self.baseLayer)
-        self.mapCanvas.setExtent(self.baseLayer.extent())
+        rect = QgsRectangle(-13735521, 5547682, -13730558, 5551709)
+        self.mapCanvas.setExtent(rect)
 
         uri = QgsDataSourceUri()
         uri.setDatabase(os.path.join(cur_dir, "data", "tracks.sqlite"))
@@ -91,46 +91,30 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.trackLayer = QgsVectorLayer(uri.uri(), "Tracks", "spatialite")
         QgsProject.instance().addMapLayer(self.trackLayer)
 
-        #layers.insert(0, self.stmFlowLayer)
         layers.insert(0, self.trackLayer)
-
+        QgsProject.instance().setCrs(crs)
         self.mapCanvas.setLayers(layers)
-
+        print(self.baseLayer.crs())
 
     def setupRenderers(self):
         # Setup the renderer for our track layer.
 
         root_rule = QgsRuleBasedRenderer.Rule(None)
+        width = .3
+        line_colour  = "red"
+        arrow_colour = "red"
+        for track_direction in (TRACK_DIRECTION_BOTH,
+                                TRACK_DIRECTION_FORWARD):
 
-        for track_type in (TRACK_TYPE_ROAD, TRACK_TYPE_WALKING,
-                           TRACK_TYPE_BIKE, TRACK_TYPE_HORSE):
-            if track_type == TRACK_TYPE_ROAD:
-                width = ROAD_WIDTH
-            else:
-                width = TRAIL_WIDTH
+            symbol = self.createTrackSymbol(width,
+                                            line_colour,
+                                            arrow_colour,
+                                            track_direction)
+            expression = "(direction='%s')" % track_direction
 
-            line_colour  = "red"
-            arrow_colour = "red"
-
-            for track_status in (TRACK_STATUS_OPEN, TRACK_STATUS_CLOSED):
-
-                for track_direction in (TRACK_DIRECTION_BOTH,
-                                        TRACK_DIRECTION_FORWARD,
-                                        TRACK_DIRECTION_BACKWARD):
-
-                    symbol = self.createTrackSymbol(width,
-                                                    line_colour,
-                                                    arrow_colour,
-                                                    track_status,
-                                                    track_direction)
-                    expression = ("(type='%s') and " +
-                                  "(status='%s') and " +
-                                  "(direction='%s')") % (
-                                  track_type, track_status, track_direction)
-
-                    rule = QgsRuleBasedRenderer.Rule(symbol,
-                                                       filterExp=expression)
-                    root_rule.appendChild(rule)
+            rule = QgsRuleBasedRenderer.Rule(symbol,
+                                               filterExp=expression)
+            root_rule.appendChild(rule)
         symbol = QgsLineSymbol.createSimple({'line_style': 'dash', 'color': 'red'})
         rule = QgsRuleBasedRenderer.Rule(symbol, elseRule=True)
         root_rule.appendChild(rule)
@@ -142,70 +126,39 @@ class SWAMain(QMainWindow, Ui_MainWindow):
 
 
     def createTrackSymbol(self, width, line_colour, arrow_colour,
-                          status, direction):
+                          direction):
         symbol = QgsLineSymbol.createSimple({})
         symbol.deleteSymbolLayer(0) # Remove default symbol layer.
 
         symbol_layer = QgsSimpleLineSymbolLayer()
         symbol_layer.setWidth(width)
         symbol_layer.setColor(QColor(line_colour))
-        if status == TRACK_STATUS_CLOSED:
-            symbol_layer.setPenStyle(Qt.DotLine)
         symbol.appendSymbolLayer(symbol_layer)
+        registry = QgsSymbolLayerRegistry()
+        marker_line_metadata = registry.symbolLayerMetadata("MarkerLine")
+        marker_metadata      = registry.symbolLayerMetadata("SimpleMarker")
 
-        if direction == TRACK_DIRECTION_FORWARD:
-            registry = QgsSymbolLayerRegistry()
-            marker_line_metadata = registry.symbolLayerMetadata("MarkerLine")
-            marker_metadata      = registry.symbolLayerMetadata("SimpleMarker")
+        symbol_layer = marker_line_metadata.createSymbolLayer({
+                        "width"     : "0.26",
+                        "color"     : arrow_colour,
+                        "rotate"    : "1",
+                        "placement" : "interval",
+                        "interval"  : "20",
+                        "offset"    : "0"})
+        sub_symbol = symbol_layer.subSymbol()
+        sub_symbol.deleteSymbolLayer(0)
 
-            symbol_layer = marker_line_metadata.createSymbolLayer({
-                            "width"     : "0.26",
-                            "color"     : arrow_colour,
-                            "rotate"    : "1",
-                            "placement" : "interval",
-                            "interval"  : "20",
-                            "offset"    : "0"})
-            sub_symbol = symbol_layer.subSymbol()
-            sub_symbol.deleteSymbolLayer(0)
-
-            triangle = marker_metadata.createSymbolLayer({
-                            "name"          : "filled_arrowhead",
-                            "color"         : arrow_colour,
-                            "color_border"  : arrow_colour,
-                            "offset"        : "0.0",
-                            "size"          : "3",
-                            "outline_width" : "0.5",
-                            "output_unit"   : "mapunit",
-                            "angle"         : "0"})
-            sub_symbol.appendSymbolLayer(triangle)
-            symbol.appendSymbolLayer(symbol_layer)
-        elif direction == TRACK_DIRECTION_BACKWARD:
-            registry = QgsSymbolLayerRegistry()
-            marker_line_metadata = registry.symbolLayerMetadata("MarkerLine")
-            marker_metadata      = registry.symbolLayerMetadata("SimpleMarker")
-
-            symbol_layer = marker_line_metadata.createSymbolLayer({
-                            "width"     : "0.26",
-                            "color"     : arrow_colour,
-                            "rotate"    : "1",
-                            "placement" : "interval",
-                            "interval"  : "20",
-                            "offset"    : "0"})
-            sub_symbol = symbol_layer.subSymbol()
-            sub_symbol.deleteSymbolLayer(0)
-
-            triangle = marker_metadata.createSymbolLayer({
-                            "name"          : "filled_arrowhead",
-                            "color"         : arrow_colour,
-                            "color_border"  : arrow_colour,
-                            "offset"        : "0.0",
-                            "size"          : "3",
-                            "outline_width" : "0.5",
-                            "output_unit"   : "mapunit",
-                            "angle"         : "180"})
-            sub_symbol.appendSymbolLayer(triangle)
-            symbol.appendSymbolLayer(symbol_layer)
-
+        triangle = marker_metadata.createSymbolLayer({
+                        "name"          : "filled_arrowhead",
+                        "color"         : arrow_colour,
+                        "color_border"  : arrow_colour,
+                        "offset"        : "0.0",
+                        "size"          : "3",
+                        "outline_width" : "0.5",
+                        "output_unit"   : "mapunit",
+                        "angle"         : "0"})
+        sub_symbol.appendSymbolLayer(triangle)
+        symbol.appendSymbolLayer(symbol_layer)
         return symbol
 
 
@@ -331,19 +284,16 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         shpFileName = QFileDialog.getOpenFileName(None, "Select File")
         if shpFileName[0] != "":
             self.newLayer = QgsVectorLayer(shpFileName[0])
-            self.stmFlowLayer = QgsVectorLayer("Storm Flow", "ogr")
-            if not self.newLayer.isValid():
-                print("shp Layer failed to load")
             QgsProject.instance().addMapLayer(self.newLayer)
             currentLayers = self.mapCanvas.layers()
-            currentLayers.insert(1, self.newLayer)
+            currentLayers.insert(0, self.newLayer)
             self.mapCanvas.setLayers(currentLayers)
+            self.mapCanvas.setExtent(self.newLayer.extent())
             self.mapCanvas.refresh()
 
 
 
-
-def fileLoaded(path):
+def openMainUi(path):
     window = SWAMain(path)
     window.show()
     window.raise_()
@@ -354,7 +304,6 @@ def fileLoaded(path):
     window.setPanMode()
     window.adjustActions()
 
-
 def main():
 
     QgsApplication.setPrefixPath("C:\\OSGeo4W64\\apps\\qgis", True)
@@ -363,7 +312,7 @@ def main():
 
     firstWindow = Welcome()
     firstWindow.show()
-    firstWindow.loaded[str].connect(fileLoaded)
+    firstWindow.loaded[str].connect(openMainUi)
 
     app.exec_()
     app.deleteLater()
