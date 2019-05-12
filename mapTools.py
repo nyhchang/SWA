@@ -201,7 +201,6 @@ class AddFlowPathTool(QgsMapTool, MapToolHelpers):
 
         feature = QgsFeature()
         feature.setGeometry(QgsGeometry.fromPolylineXY(points))
-        print(QgsGeometry.fromPolylineXY(points))
         feature.setFields(fields)
         feature.setAttribute("direction", "FORWARD")
 
