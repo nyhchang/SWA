@@ -320,10 +320,17 @@ class SWAMain(QMainWindow, Ui_MainWindow):
             self.mapCanvas.refresh()
 
 
+def handler(msg_type, msg_log_context, msg_string):
+    pass
+
+
+
 def main():
+    QtCore.qInstallMessageHandler(handler) #bug with docklayer + paint. Suppress error messages for now
     QgsApplication.setPrefixPath("C:\\OSGeo4W64\\apps\\qgis", True)
     app = QgsApplication([], False)
     app.initQgis()
+
 
     firstWindow = Welcome()
     firstWindow.show()
