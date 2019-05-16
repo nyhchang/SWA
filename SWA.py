@@ -30,7 +30,7 @@ class Welcome(QMainWindow, Ui_Dialog):
         self.newWindow.raise_()
         self.newWindow.setupDatabase()
         self.newWindow.setupMapLayers()
-        self.newWindow.setupRenderers()
+        self.newWindow.setupRenderers(self.newWindow.StreetFlowLayer)
         self.newWindow.setupMapTools()
         self.newWindow.setPanMode()
         self.newWindow.adjustActions()
@@ -49,6 +49,8 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.actionEditFlowPath.triggered.connect(self.editFlowPath)
         self.actionDeleteFlowPath.triggered.connect(self.deleteFlowPath)
         self.actionLoad_File.triggered.connect(self.openShp)
+        self.actionAddLayer.triggered.connect(self.newLayer)
+        self.layerTreeView().currentLayerChanged.connect(self.selectNewLayer)
 
         self.mapCanvas = self.QgsMapCanvas
         self.mapCanvas.setCanvasColor(Qt.white)
@@ -97,10 +99,10 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         uri.setDatabase(os.path.join(cur_dir, "data", "FlowPaths.sqlite"))
         uri.setDataSource("", "FlowPaths", "GEOMETRY")
 
-        self.FlowPathLayer = QgsVectorLayer(uri.uri(), "FlowPaths", "spatialite")
-        QgsProject.instance().addMapLayer(self.FlowPathLayer)
+        self.StreetFlowLayer = QgsVectorLayer(uri.uri(), "Street Flow", "spatialite")
+        QgsProject.instance().addMapLayer(self.StreetFlowLayer)
 
-        layers.insert(0, self.FlowPathLayer)
+        layers.insert(0, self.StreetFlowLayer)
         QgsProject.instance().setCrs(crs)
         self.mapCanvas.setLayers(layers)
 
@@ -121,7 +123,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, self.LegendDock)
 
 
-    def setupRenderers(self):
+    def setupRenderers(self, layer):
         # Setup the renderer for our FlowPath layer.
 
         root_rule = QgsRuleBasedRenderer.Rule(None)
@@ -145,7 +147,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         root_rule.appendChild(rule)
 
         renderer = QgsRuleBasedRenderer(root_rule)
-        self.FlowPathLayer.setRenderer(renderer)
+        layer.setRenderer(renderer)
 
 
 
@@ -210,17 +212,17 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.panTool = PanTool(self.mapCanvas)
         self.panTool.setAction(self.actionPan)
         self.addFlowPathTool = AddFlowPathTool(self.mapCanvas,
-                                         self.FlowPathLayer,
+                                         self.StreetFlowLayer,
                                          self.onFlowPathAdded)
         self.addFlowPathTool.setAction(self.actionAddFlowPath)
 
         self.editFlowPathTool = EditFlowPathTool(self.mapCanvas,
-                                           self.FlowPathLayer,
+                                           self.StreetFlowLayer,
                                            self.onFlowPathEdited)
         self.editFlowPathTool.setAction(self.actionEditFlowPath)
 
         self.deleteFlowPathTool = DeleteFlowPathTool(self.mapCanvas,
-                                               self.FlowPathLayer,
+                                               self.StreetFlowLayer,
                                                self.onFlowPathDeleted)
         self.deleteFlowPathTool.setAction(self.actionDeleteFlowPath)
 
@@ -239,9 +241,9 @@ class SWAMain(QMainWindow, Ui_MainWindow):
                                          | QMessageBox.Cancel,
                                          QMessageBox.Yes)
             if reply == QMessageBox.Yes:
-                self.FlowPathLayer.commitChanges()
+                self.StreetFlowLayer.commitChanges()
             elif reply == QMessageBox.No:
-                self.FlowPathLayer.rollBack()
+                self.StreetFlowLayer.rollBack()
 
             if reply != QMessageBox.Cancel:
                 qApp.quit()
@@ -286,17 +288,17 @@ class SWAMain(QMainWindow, Ui_MainWindow):
             if self.modified:
                 reply = QMessageBox.question(self, "Confirm", "Save Changes?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if reply == QMessageBox.Yes:
-                    self.FlowPathLayer.commitChanges()
+                    self.StreetFlowLayer.commitChanges()
                 else:
-                    self.FlowPathLayer.rollBack()
+                    self.StreetFlowLayer.rollBack()
             else:
-                self.FlowPathLayer.commitChanges()
-            self.FlowPathLayer.triggerRepaint()
+                self.StreetFlowLayer.commitChanges()
+            self.StreetFlowLayer.triggerRepaint()
             self.editing = False
             self.setPanMode()
         else:
-            self.FlowPathLayer.startEditing()
-            self.FlowPathLayer.triggerRepaint()
+            self.StreetFlowLayer.startEditing()
+            self.StreetFlowLayer.triggerRepaint()
             self.editing = True
             self.modified = False
 
@@ -318,6 +320,9 @@ class SWAMain(QMainWindow, Ui_MainWindow):
             self.mapCanvas.setLayers(currentLayers)
             self.mapCanvas.setExtent(self.newLayer.extent())
             self.mapCanvas.refresh()
+
+    def newLayer(self):
+        self.newLayer = QgsVectorLayer()
 
 
 def handler(msg_type, msg_log_context, msg_string):
