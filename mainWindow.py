@@ -210,5 +210,6 @@ class Ui_MainWindow(object):
         self.actionSave.setText(_translate("MainWindow", "Save"))
         self.actionSave_as.setText(_translate("MainWindow", "Save as"))
         self.actionPrint.setText(_translate("MainWindow", "Print"))
+        self.actionAddLayer.setText(_translate("MainWindow", "Add Layer"))
 
 from qgis.gui import QgsMapCanvas

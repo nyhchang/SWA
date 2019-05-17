@@ -28,17 +28,30 @@ class Welcome(QMainWindow, Ui_Dialog):
         self.newWindow = SWAMain(path)
         self.newWindow.show()
         self.newWindow.raise_()
-        self.newWindow.setupDatabase()
-        self.newWindow.setupMapLayers()
-        self.newWindow.setupRenderers(self.newWindow.StreetFlowLayer)
-        self.newWindow.setupMapTools()
-        self.newWindow.setPanMode()
-        self.newWindow.adjustActions()
+
 
 class SWAMain(QMainWindow, Ui_MainWindow):
     def __init__(self, path):
         QMainWindow.__init__(self)
         self.setupUi(self)
+
+        self.editing = False
+        self.modified = False
+
+
+
+        self.mapCanvas = self.QgsMapCanvas
+        self.mapCanvas.setCanvasColor(Qt.white)
+        self.mapCanvas.setGeometry(QRect(140, 130, 521, 301))
+        self.mapCanvas.show()
+
+        self.setupDatabase("StreetFlowLayer")
+        self.setupMapLayers()
+        self.setupRenderers(self.StreetFlowLayer)
+        self.setupMapTools(self.StreetFlowLayer)
+        self.setPanMode()
+        self.adjustActions()
+        self.view.setCurrentLayer(self.StreetFlowLayer)
 
         self.actionQuit.triggered.connect(self.quit)
         self.actionPan.triggered.connect(self.setPanMode)
@@ -49,20 +62,12 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.actionEditFlowPath.triggered.connect(self.editFlowPath)
         self.actionDeleteFlowPath.triggered.connect(self.deleteFlowPath)
         self.actionLoad_File.triggered.connect(self.openShp)
-        self.actionAddLayer.triggered.connect(self.newLayer)
-        self.layerTreeView().currentLayerChanged.connect(self.selectNewLayer)
+        self.actionAddLayer.triggered.connect(self.addLayer)
+        self.view.currentLayerChanged.connect(self.selectNewLayer)
 
-        self.mapCanvas = self.QgsMapCanvas
-        self.mapCanvas.setCanvasColor(Qt.white)
-        self.mapCanvas.setGeometry(QRect(140, 130, 521, 301))
-        self.mapCanvas.show()
-
-        self.editing = False
-        self.modified = False
-
-    def setupDatabase(self):
+    def setupDatabase(self, name):
         cur_dir = os.path.dirname(os.path.realpath(__file__))
-        db_name = os.path.join(cur_dir, "data", "FlowPaths.sqlite")
+        db_name = os.path.join(cur_dir, "data", name+".sqlite")
         if not os.path.exists(db_name):
             fields = QgsFields()
             fields.append(QgsField("id", QVariant.Int))
@@ -84,8 +89,9 @@ class SWAMain(QMainWindow, Ui_MainWindow):
 
     def setupMapLayers(self):
         cur_dir = os.path.dirname(os.path.realpath(__file__))
-        self.baseLayer = QgsRasterLayer(os.path.join(cur_dir, "data", "basemap", "basemap.xml"), "OSM")
+        list_dir = os.listdir(os.path.join(cur_dir, "data"))
         layers = []
+        self.baseLayer = QgsRasterLayer(os.path.join(cur_dir, "data", "basemap", "basemap.xml"), "OSM")
         if not self.baseLayer.isValid():
             print("Layer failed to load")
         crs = QgsCoordinateReferenceSystem(2913)
@@ -96,14 +102,28 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.mapCanvas.setExtent(rect)
 
         uri = QgsDataSourceUri()
-        uri.setDatabase(os.path.join(cur_dir, "data", "FlowPaths.sqlite"))
-        uri.setDataSource("", "FlowPaths", "GEOMETRY")
+        uri.setDatabase(os.path.join(cur_dir, "data", "StreetFlowLayer.sqlite"))
+        uri.setDataSource("", "StreetFlowLayer", "GEOMETRY")
 
         self.StreetFlowLayer = QgsVectorLayer(uri.uri(), "Street Flow", "spatialite")
         QgsProject.instance().addMapLayer(self.StreetFlowLayer)
 
         layers.insert(0, self.StreetFlowLayer)
         QgsProject.instance().setCrs(crs)
+
+        for f in list_dir:
+            ext = os.path.splitext(f)[-1].lower()
+            front = os.path.splitext(f)
+            if ext == ".sqlite":
+                if front[0] != "StreetFlowLayer":
+                    uri = QgsDataSourceUri()
+                    uri.setDatabase(os.path.join(cur_dir, "data", f))
+                    uri.setDataSource("", front[0], "GEOMETRY")
+                    self.drawLayer = QgsVectorLayer(uri.uri(), front[0], "spatialite")
+                    QgsProject.instance().addMapLayer(self.drawLayer)
+                    self.setupRenderers(self.drawLayer)
+                    layers.insert(0, self.drawLayer)
+
         self.mapCanvas.setLayers(layers)
 
         self.root = QgsProject.instance().layerTreeRoot()
@@ -123,9 +143,9 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, self.LegendDock)
 
 
+
     def setupRenderers(self, layer):
         # Setup the renderer for our FlowPath layer.
-
         root_rule = QgsRuleBasedRenderer.Rule(None)
         width = .3
         line_colour  = "red"
@@ -208,21 +228,21 @@ class SWAMain(QMainWindow, Ui_MainWindow):
     def closeEvent(self, event):
         self.quit()
 
-    def setupMapTools(self):
+    def setupMapTools(self, layer):
         self.panTool = PanTool(self.mapCanvas)
         self.panTool.setAction(self.actionPan)
         self.addFlowPathTool = AddFlowPathTool(self.mapCanvas,
-                                         self.StreetFlowLayer,
+                                         layer,
                                          self.onFlowPathAdded)
         self.addFlowPathTool.setAction(self.actionAddFlowPath)
 
         self.editFlowPathTool = EditFlowPathTool(self.mapCanvas,
-                                           self.StreetFlowLayer,
+                                           layer,
                                            self.onFlowPathEdited)
         self.editFlowPathTool.setAction(self.actionEditFlowPath)
 
         self.deleteFlowPathTool = DeleteFlowPathTool(self.mapCanvas,
-                                               self.StreetFlowLayer,
+                                               layer,
                                                self.onFlowPathDeleted)
         self.deleteFlowPathTool.setAction(self.actionDeleteFlowPath)
 
@@ -284,21 +304,25 @@ class SWAMain(QMainWindow, Ui_MainWindow):
             self.setPanMode()
 
     def setEditMode(self):
+        layer = self.view.currentLayer()
+        print(layer)
+        if layer is None:
+            layer = self.StreetFlowLayer
         if self.editing:
             if self.modified:
                 reply = QMessageBox.question(self, "Confirm", "Save Changes?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if reply == QMessageBox.Yes:
-                    self.StreetFlowLayer.commitChanges()
+                    layer.commitChanges()
                 else:
-                    self.StreetFlowLayer.rollBack()
+                    layer.rollBack()
             else:
-                self.StreetFlowLayer.commitChanges()
-            self.StreetFlowLayer.triggerRepaint()
+                layer.commitChanges()
+            layer.triggerRepaint()
             self.editing = False
             self.setPanMode()
         else:
-            self.StreetFlowLayer.startEditing()
-            self.StreetFlowLayer.triggerRepaint()
+            layer.startEditing()
+            layer.triggerRepaint()
             self.editing = True
             self.modified = False
 
@@ -321,8 +345,30 @@ class SWAMain(QMainWindow, Ui_MainWindow):
             self.mapCanvas.setExtent(self.newLayer.extent())
             self.mapCanvas.refresh()
 
-    def newLayer(self):
-        self.newLayer = QgsVectorLayer()
+    def selectNewLayer(self):
+        print("New layer selected")
+        self.setupMapTools(self.view.currentLayer())
+        if self.editing:
+            self.setEditMode()
+
+    def addLayer(self):
+        print("Add a new layer")
+        name, pressed = QInputDialog.getText(self, "Add a new layer", "Layer name (no spaces):", QLineEdit.Normal, "")
+        if pressed:
+            self.setupDatabase(name)
+            cur_dir = os.path.dirname(os.path.realpath(__file__))
+            uri = QgsDataSourceUri()
+            uri.setDatabase(os.path.join(cur_dir, "data", name + ".sqlite"))
+            uri.setDataSource("", name, "GEOMETRY")
+            self.newlayer1 = QgsVectorLayer(uri.uri(), name, "spatialite")
+            QgsProject.instance().addMapLayer(self.newlayer1)
+            self.setupRenderers(self.newlayer1)
+            currentLayers = self.mapCanvas.layers()
+            currentLayers.insert(0, self.newlayer1)
+            self.mapCanvas.setLayers(currentLayers)
+            self.mapCanvas.refresh()
+            print("new layer added")
+
 
 
 def handler(msg_type, msg_log_context, msg_string):
@@ -331,7 +377,7 @@ def handler(msg_type, msg_log_context, msg_string):
 
 
 def main():
-    QtCore.qInstallMessageHandler(handler) #bug with docklayer + paint. Suppress error messages for now
+    #QtCore.qInstallMessageHandler(handler) #bug with docklayer + paint. Suppress error messages for now
     QgsApplication.setPrefixPath("C:\\OSGeo4W64\\apps\\qgis", True)
     app = QgsApplication([], False)
     app.initQgis()
