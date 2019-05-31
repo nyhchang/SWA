@@ -1,5 +1,5 @@
 @echo off
-set OSGEO4W_ROOT=%cd%\OSGeo4W64
+set OSGEO4W_ROOT=C:\\OSGeo4W64
 call "%OSGEO4W_ROOT%\bin\o4w_env.bat"
 call "%OSGEO4W_ROOT%\bin\qt5_env.bat"
 call "%OSGEO4W_ROOT%\bin\py3_env.bat"

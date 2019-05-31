@@ -38,6 +38,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.editing = False
         self.modified = False
 
+        self.counter = 0
 
 
         self.mapCanvas = self.QgsMapCanvas
@@ -47,7 +48,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
 
         self.setupDatabase("StreetFlowLayer")
         self.setupMapLayers()
-        self.setupRenderers(self.StreetFlowLayer)
+        self.setupRenderers(self.StreetFlowLayer, self.counter)
         self.setupMapTools(self.StreetFlowLayer)
         self.setPanMode()
         self.adjustActions()
@@ -63,6 +64,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.actionDeleteFlowPath.triggered.connect(self.deleteFlowPath)
         self.actionLoad_File.triggered.connect(self.openShp)
         self.actionAddLayer.triggered.connect(self.addLayer)
+        self.actionDeleteLayer.triggered.connect(self.deleteLayer)
         self.view.currentLayerChanged.connect(self.selectNewLayer)
 
     def setupDatabase(self, name):
@@ -121,7 +123,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
                     uri.setDataSource("", front[0], "GEOMETRY")
                     self.drawLayer = QgsVectorLayer(uri.uri(), front[0], "spatialite")
                     QgsProject.instance().addMapLayer(self.drawLayer)
-                    self.setupRenderers(self.drawLayer)
+                    self.setupRenderers(self.drawLayer, self.counter)
                     layers.insert(0, self.drawLayer)
 
         self.mapCanvas.setLayers(layers)
@@ -144,11 +146,22 @@ class SWAMain(QMainWindow, Ui_MainWindow):
 
 
 
-    def setupRenderers(self, layer):
+    def setupRenderers(self, layer, counter):
         # Setup the renderer for our FlowPath layer.
         root_rule = QgsRuleBasedRenderer.Rule(None)
         width = .3
         line_colour  = "red"
+        while counter > 4:
+            counter = counter % 4
+        if counter == 1:
+            line_colour = "blue"
+        if counter == 2:
+            line_colour = "green"
+        if counter == 3:
+            line_colour = "orange"
+        if counter == 4:
+            line_colour = "purple"
+
         arrow_colour = "red"
         for FlowPath_direction in ("BOTH",
                                 "FORWARD"):
@@ -165,6 +178,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         symbol = QgsLineSymbol.createSimple({'line_style': 'dash', 'color': 'red'})
         rule = QgsRuleBasedRenderer.Rule(symbol, elseRule=True)
         root_rule.appendChild(rule)
+        self.counter = counter + 1
 
         renderer = QgsRuleBasedRenderer(root_rule)
         layer.setRenderer(renderer)
@@ -346,14 +360,12 @@ class SWAMain(QMainWindow, Ui_MainWindow):
             self.mapCanvas.refresh()
 
     def selectNewLayer(self):
-        print("New layer selected")
         self.setupMapTools(self.view.currentLayer())
         if self.editing:
             self.setEditMode()
 
     def addLayer(self):
-        print("Add a new layer")
-        name, pressed = QInputDialog.getText(self, "Add a new layer", "Layer name (no spaces):", QLineEdit.Normal, "")
+        name, pressed = QInputDialog.getText(self, "Add a new layer", "Layer name:", QLineEdit.Normal, "")
         if pressed:
             self.setupDatabase(name)
             cur_dir = os.path.dirname(os.path.realpath(__file__))
@@ -362,12 +374,30 @@ class SWAMain(QMainWindow, Ui_MainWindow):
             uri.setDataSource("", name, "GEOMETRY")
             self.newlayer1 = QgsVectorLayer(uri.uri(), name, "spatialite")
             QgsProject.instance().addMapLayer(self.newlayer1)
-            self.setupRenderers(self.newlayer1)
+            self.setupRenderers(self.newlayer1, self.counter)
             currentLayers = self.mapCanvas.layers()
             currentLayers.insert(0, self.newlayer1)
             self.mapCanvas.setLayers(currentLayers)
             self.mapCanvas.refresh()
-            print("new layer added")
+    def deleteLayer(self):
+        print("Delete a layer")
+        deleteConfirmation = QMessageBox.question(self, "Delete",
+                                   "Are you sure you want to delete this layer? This will permanently delete all data and files associated with this layer.",
+                                   QMessageBox.Yes, QMessageBox.No)
+        if deleteConfirmation == QMessageBox.Yes:
+            cur_dir = os.path.dirname(os.path.realpath(__file__))
+            data_dir = os.path.join(cur_dir, "data")
+            os.chdir(data_dir)
+            layerToRemove = self.view.currentLayer()
+            layerName = layerToRemove.name() + ".sqlite"
+            QgsProject.instance().removeMapLayer(layerToRemove)
+            if os.path.isfile(layerName):
+                os.remove(layerName)
+                self.mapCanvas.refresh()
+
+
+
+
 
 
 

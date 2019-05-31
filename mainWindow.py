@@ -187,6 +187,9 @@ class Ui_MainWindow(object):
         self.actionPrint.setObjectName("actionPrint")
         self.actionAddLayer = QtWidgets.QAction(MainWindow)
         self.actionAddLayer.setObjectName("actionAddLayer")
+        self.actionDeleteLayer = QtWidgets.QAction(MainWindow)
+        self.actionDeleteLayer.setObjectName("actionDeleteLayer")
+        self.menuFile.addAction(self.actionDeleteLayer)
         self.menuFile.addAction(self.actionAddLayer)
         self.menuFile.addAction(self.actionLoad_File)
         self.menuFile.addAction(self.actionSave)
@@ -211,5 +214,7 @@ class Ui_MainWindow(object):
         self.actionSave_as.setText(_translate("MainWindow", "Save as"))
         self.actionPrint.setText(_translate("MainWindow", "Print"))
         self.actionAddLayer.setText(_translate("MainWindow", "Add Layer"))
+        self.actionDeleteLayer.setText(_translate("MainWindow", "Delete Layer"))
+
 
 from qgis.gui import QgsMapCanvas
