@@ -1,6 +1,7 @@
 import os
 import os.path
 import sys
+import time
 
 from qgis.core import *
 from qgis.gui import *
@@ -9,6 +10,16 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from mapTools import *
 from osgeo import gdal
+from qgis.analysis import QgsNativeAlgorithms
+from PyQt5 import QtPrintSupport
+from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
+
+wkDir = os.path.dirname(os.path.realpath(__file__))
+pluginDir = os.path.join(wkDir, "OSGeo4W64\\apps\\qgis\\python\\plugins")
+#sys.path.append(pluginDir)
+sys.path.append('C:\\OSGeo4W64\\apps\\qgis\\python\\plugins')
+import processing
+from processing.core.Processing import Processing
 
 
 from mainWindow import Ui_MainWindow
@@ -16,22 +27,14 @@ from WelcomeWindow import Ui_Dialog
 
 from mapTools import *
 
-class Welcome(QMainWindow, Ui_Dialog):
+class Welcome(QDialog, Ui_Dialog):
     def __init__(self):
         QMainWindow.__init__(self)
         self.setupUi(self)
 
-        self.loaded[str].connect(self.onLoadFile)
-
-    def onLoadFile(self, path):
-        self.hide()
-        self.newWindow = SWAMain(path)
-        self.newWindow.show()
-        self.newWindow.raise_()
-
 
 class SWAMain(QMainWindow, Ui_MainWindow):
-    def __init__(self, path):
+    def __init__(self):
         QMainWindow.__init__(self)
         self.setupUi(self)
 
@@ -65,6 +68,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
         self.actionLoad_File.triggered.connect(self.openShp)
         self.actionAddLayer.triggered.connect(self.addLayer)
         self.actionDeleteLayer.triggered.connect(self.deleteLayer)
+        self.actionPrint.triggered.connect(self.printMap)
         self.view.currentLayerChanged.connect(self.selectNewLayer)
 
     def setupDatabase(self, name):
@@ -351,13 +355,18 @@ class SWAMain(QMainWindow, Ui_MainWindow):
             url = QUrl.fromLocalFile(shpFileName[0])
             filenameunsplit = url.fileName()
             filesplit = filenameunsplit.split(".")
-            self.newLayer = QgsVectorLayer(shpFileName[0], filesplit[0], "ogr")
-            QgsProject.instance().addMapLayer(self.newLayer)
-            currentLayers = self.mapCanvas.layers()
-            currentLayers.insert(0, self.newLayer)
-            self.mapCanvas.setLayers(currentLayers)
-            self.mapCanvas.setExtent(self.newLayer.extent())
-            self.mapCanvas.refresh()
+            parameter = {'INPUT': shpFileName[0], 'TARGET_CRS': 'EPSG:3857', 'OUTPUT': 'data\\temp'}
+            reproject = processing.run('qgis:reprojectlayer', parameter)
+            self.newLayer = QgsVectorLayer('data\\temp.gpkg', filesplit[0], "ogr")
+            if self.newLayer.isValid():
+                QgsProject.instance().addMapLayer(self.newLayer)
+                currentLayers = self.mapCanvas.layers()
+                currentLayers.insert(0, self.newLayer)
+                self.mapCanvas.setLayers(currentLayers)
+                self.mapCanvas.setExtent(self.newLayer.extent())
+                self.mapCanvas.refresh()
+            else:
+                self.errorHandlePopup("Unable to open file.", filenameunsplit + " is invalid")
 
     def selectNewLayer(self):
         self.setupMapTools(self.view.currentLayer())
@@ -379,6 +388,7 @@ class SWAMain(QMainWindow, Ui_MainWindow):
             currentLayers.insert(0, self.newlayer1)
             self.mapCanvas.setLayers(currentLayers)
             self.mapCanvas.refresh()
+
     def deleteLayer(self):
         print("Delete a layer")
         deleteConfirmation = QMessageBox.question(self, "Delete",
@@ -392,13 +402,29 @@ class SWAMain(QMainWindow, Ui_MainWindow):
             layerName = layerToRemove.name() + ".sqlite"
             QgsProject.instance().removeMapLayer(layerToRemove)
             if os.path.isfile(layerName):
-                os.remove(layerName)
-                self.mapCanvas.refresh()
+                try:
+                    os.remove(layerName)
+                    self.mapCanvas.refresh()
+                except (PermissionError, FileNotFoundError):
+                    pass
 
+    def errorHandlePopup(self, message, secMessage):
+        errHand = QMessageBox()
+        errHand.setIcon(QMessageBox.Critical)
+        errHand.setText(message)
+        if secMessage != "":
+            errHand.setInformativeText(secMessage)
+        errHand.setWindowTitle("Error")
+        errHand.setStandardButtons(QMessageBox.Cancel)
+        errHand.exec_()
 
+    def printMap(self):
+        dialog = QtPrintSupport.QPrintPreviewDialog()
+        dialog.paintRequested.connect(self.handlePaintRequest)
+        dialog.exec_()
 
-
-
+    def handlePaintRequest(self, printer):
+        self.mapCanvas.render(QPainter(printer))
 
 
 def handler(msg_type, msg_log_context, msg_string):
@@ -412,9 +438,16 @@ def main():
     app = QgsApplication([], False)
     app.initQgis()
 
+    Processing.initialize()
+    QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
 
     firstWindow = Welcome()
     firstWindow.show()
+    time.sleep(5)
+    firstWindow.close()
+
+    secondWindow = SWAMain()
+    secondWindow.show()
 
     app.exec_()
     app.deleteLater()
