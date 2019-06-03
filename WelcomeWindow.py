@@ -1,14 +1,19 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+import os
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
+        wkDir = os.path.dirname(os.path.realpath(__file__))
+        print(wkDir)
+        imgDir = os.path.join(wkDir, "resources", "logo-fs8.png")
+        print(imgDir)
         Dialog.setObjectName("Dialog")
         Dialog.resize(540, 382)
         self.gridLayout = QtWidgets.QGridLayout(Dialog)
         self.gridLayout.setObjectName("gridLayout")
         self.label = QtWidgets.QLabel(Dialog)
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap("../SWA/resources/logo-fs8.png"))
+        self.label.setPixmap(QtGui.QPixmap(imgDir))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
         self.gridLayout.addWidget(self.label, 1, 1, 1, 1)

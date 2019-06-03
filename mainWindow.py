@@ -153,12 +153,9 @@ class Ui_MainWindow(object):
         self.actionSave_as.setObjectName("actionSave_as")
         self.actionPrint = QtWidgets.QAction(MainWindow)
         self.actionPrint.setObjectName("actionPrint")
-        self.actionAddLayer = QtWidgets.QAction(MainWindow)
-        self.actionAddLayer.setObjectName("actionAddLayer")
         self.actionDeleteLayer = QtWidgets.QAction(MainWindow)
         self.actionDeleteLayer.setObjectName("actionDeleteLayer")
         self.menuFile.addAction(self.actionDeleteLayer)
-        self.menuFile.addAction(self.actionAddLayer)
         self.menuFile.addAction(self.actionLoad_File)
         self.menuFile.addAction(self.actionSave)
         self.menuFile.addAction(self.actionSave_as)
@@ -177,7 +174,6 @@ class Ui_MainWindow(object):
         self.actionSave.setText(_translate("MainWindow", "Save"))
         self.actionSave_as.setText(_translate("MainWindow", "Save as"))
         self.actionPrint.setText(_translate("MainWindow", "Print"))
-        self.actionAddLayer.setText(_translate("MainWindow", "Add Layer"))
         self.actionDeleteLayer.setText(_translate("MainWindow", "Delete Layer"))
 
 
