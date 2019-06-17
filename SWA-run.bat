@@ -1,5 +1,6 @@
 @echo off
-set /p OSGEO4W64_ROOT= "Please paste path to root folder of OSGeo4W64: "
+set CUR_DIR=%cd%
+set OSGEO4W64_ROOT=%CUR_DIR%\OSGeo4W64
 call "%OSGEO4W64_ROOT%\bin\o4w_env.bat"
 call "%OSGEO4W64_ROOT%\bin\qt5_env.bat"
 call "%OSGEO4W64_ROOT%\bin\py3_env.bat"
