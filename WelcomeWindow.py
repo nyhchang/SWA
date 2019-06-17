@@ -4,10 +4,8 @@ import os
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         wkDir = os.path.dirname(os.path.realpath(__file__))
-        print(wkDir)
         imgDir = os.path.join(wkDir, "resources", "logo-fs8.png")
-        print(imgDir)
-        Dialog.setObjectName("Dialog")
+        Dialog.setObjectName("Welcome")
         Dialog.resize(540, 382)
         self.gridLayout = QtWidgets.QGridLayout(Dialog)
         self.gridLayout.setObjectName("gridLayout")
@@ -39,7 +37,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        Dialog.setWindowTitle(_translate("Dialog", "Welcome"))
         self.label_2.setText(_translate("Dialog", "Welcome to the StormWater Application"))
 
 

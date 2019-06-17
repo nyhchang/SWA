@@ -11,8 +11,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QDesktopServices
+from PyQt5.QtCore import QUrl
 
 class Ui_MainWindow(object):
+    def link(self, linkStr):
+        QDesktopServices.openUrl(QUrl(linkStr))
+
     def setupUi(self, MainWindow):
         self.actionPan = QAction("Pan", MainWindow)
         self.actionPan.setShortcut("Ctrl+1")
@@ -66,15 +71,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setObjectName("horizontalLayout")
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
-        self.Export = QtWidgets.QPushButton(self.centralwidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.Export.sizePolicy().hasHeightForWidth())
-        self.Export.setSizePolicy(sizePolicy)
-        self.Export.setMinimumSize(QtCore.QSize(140, 0))
-        self.Export.setObjectName("Export")
-        self.horizontalLayout.addWidget(self.Export)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
         self.gridLayout_2.addLayout(self.horizontalLayout, 3, 2, 1, 1)
@@ -123,9 +119,21 @@ class Ui_MainWindow(object):
         self.toolButton_7.setObjectName("toolButton_7")
         self.horizontalLayout_2.addWidget(self.toolButton_7)
 
+
         spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem2)
+
+        self.label_2 = QtWidgets.QLabel()
+        font = QtGui.QFont()
+        font.setPointSize(8)
+        self.label_2.setFont(font)
+        self.label_2.setAlignment(QtCore.Qt.AlignVCenter)
+        self.label_2.setText("© <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors")
+        self.label_2.setOpenExternalLinks(True)
+        self.label_2.setObjectName("label_2")
+        self.horizontalLayout_2.addWidget(self.label_2)
         self.gridLayout_2.addLayout(self.horizontalLayout_2, 1, 2, 1, 1)
+
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         spacerItem4 = QtWidgets.QSpacerItem(20, 200, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
@@ -147,32 +155,24 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
         self.actionLoad_File = QtWidgets.QAction(MainWindow)
         self.actionLoad_File.setObjectName("actionLoad_File")
-        self.actionSave = QtWidgets.QAction(MainWindow)
-        self.actionSave.setObjectName("actionSave")
-        self.actionSave_as = QtWidgets.QAction(MainWindow)
-        self.actionSave_as.setObjectName("actionSave_as")
         self.actionPrint = QtWidgets.QAction(MainWindow)
         self.actionPrint.setObjectName("actionPrint")
         self.actionDeleteLayer = QtWidgets.QAction(MainWindow)
         self.actionDeleteLayer.setObjectName("actionDeleteLayer")
         self.menuFile.addAction(self.actionDeleteLayer)
         self.menuFile.addAction(self.actionLoad_File)
-        self.menuFile.addAction(self.actionSave)
-        self.menuFile.addAction(self.actionSave_as)
         self.menuFile.addAction(self.actionPrint)
         self.menubar.addAction(self.menuFile.menuAction())
+
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.Export.setText(_translate("MainWindow", "Export"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Stormwater Flow App"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.actionLoad_File.setText(_translate("MainWindow", "Load New File"))
-        self.actionSave.setText(_translate("MainWindow", "Save"))
-        self.actionSave_as.setText(_translate("MainWindow", "Save as"))
         self.actionPrint.setText(_translate("MainWindow", "Print"))
         self.actionDeleteLayer.setText(_translate("MainWindow", "Delete Layer"))
 
